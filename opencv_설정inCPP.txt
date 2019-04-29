@@ -1,0 +1,14 @@
+<모든구성>
+프로젝트 구성속성, C++ 추가 디렉토리
+$(OPENCV_BUILD)\include
+링커>일반>추가 라이브러리
+%OPENCV_BUILD%\x64\vc15\lib
+디버깅>환경
+PATH= %OPENCV_BUILD%\x64\vc15\bin;%PATH%
+
+<Debug 모드>
+링커>입력>추가종속성
+opencv_world341d.lib
+<Release 모드>
+링커>입력>추가종속성
+opencv_world341.lib
