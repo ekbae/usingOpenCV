@@ -1,0 +1,141 @@
+OpenCV 핸드북 v1, 2013 (다크pgmr, http://darkpgmr.tistory.com/46)
+
+1. 이미지 읽기 & 저장
+	Mat img_color = imread("sample.jpg");	// color load
+	Mat img_gray = imread("sample.jpg", 0);// gray load
+	imwrite("fname.jpg", img);
+
+2. 이미지 생성, 복사, 형변환, 색상변환, roi 설정
+	int w = 320;// width
+	int h = 240;// height
+
+	// 생성
+	Mat img(h,w,CV_8UC1);//1채널 unsigned char
+	Mat img(h,w,CV_8UC3);//3채널 unsigned char
+	Mat img = Mat::zeros(h,w,CV_32FC1);//1채널 float
+	Mat img = Mat::ones(h,w,CV_64FC3);//3채널 double
+
+	unsigned char * img_buffer;// 이미지버퍼 포인터
+	Mat img(h, w, CV_8UC3, img_buffer);//메모리 공유
+
+	// 원소 초기화
+	Mat img(h,w,CV_8UC1);
+	img = Scalar(3); // img 모든 원소값 3으로 초기화
+
+	// 참조, 복사
+	Mat img2 = img;	// 메모리 공유
+	Mat img2 = img.clone();	// 별도 메모리
+	Mat img2; img.copyTo(img2);//별도 메모리	
+
+	// 형변환 복사
+	Mat img1(h,w,CV_32FC1);
+	Mat img2;
+	img1.convertTo(img2, CV_8U);
+
+	// gray-color 변환
+	cvtColor(color, gray, CV_BGR2GRAY);
+	cvtColor(gray, color, CV_GRAY2BGR);
+
+	// roi 설정
+	Rect roi;
+	Mat sub_img = img(roi);//메모리공유
+	Mat sub_img = img(roi).clone();//별도메모리
+
+3. 영상 크기변경 및 상하좌우 반전
+	// 크기 변경
+	Mat dst;
+	resize(img, dst, Size(new_w,new_h));
+	resize(img, dst, Size(), 0.5, 0.5);//scalex, scaley
+
+	// 영상 반전(flip)
+	flip(img, dst, 0);// vertical flip
+	flip(img, dst, 1);// horizontal flip
+	flip(img, dst, -1);// vertial & horizontal flip
+
+4. 이미지에 그리기 (drawing)
+	Rect rc(x,y,w,h);
+	Scalar color(B,G,R);
+	int thickness=1;	// line thickness
+
+	line(img, Point(x1,y1), Point(x2,y2), color, thickness);
+
+	rectangle(img, rc, color, thickness);
+	rectangle(img, rc.tl(), rc.br(), color, thickness);
+	rectangle(img, rc, color, CV_FILLED);	// filled rectangle
+
+	Point center(rc.x+rc.width/2, rc.y+rc.height/2);
+	Size radius(rc.width/2, rc.height/2);
+	double rot_deg = 0;	// rotation of ellipse
+	double s_deg = 0;	// start angle of arc
+	double e_deg = 360;	// end angle of arc
+	ellipse(img,center,radius,rot_deg,s_deg,e_deg,color,thickness);
+	ellipse(img,center,radius,rot_deg,s_deg,e_deg,color,CV_FILLED);
+
+	int circle_radius = 10;
+	circle(img, center, circle_radius, color, thickness);
+	circle(img, center, circle_radius, color, CV_FILLED);
+
+	putText(img, "text", Point(x,y), FONT_HERSHEY_SIMPLEX, 1., color, thickness);
+	putText(img, "text", Point(x,y), FONT_HERSHEY_DUPLEX, 1., color, thickness);
+
+5. 이미지 디스플레이하기 (display)
+	namedWindow("name");	// auto resized
+	namedWindow("name",CV_WINDOW_NORMAL);	// manual resize
+
+	imshow("name", img);
+	char ch = waitKey();	// 무한 대기
+	char ch = waitKey(10);	// 10 msec 대기
+	if(ch == 27) ...	// ESC key
+	if(ch == 32) ...	// SPACE key
+
+	destroyWindow("name");
+	destroyAllWindows();
+
+6. 웹캠 연결하기
+	VideoCapture vc(0);
+	if (!vc.isOpened()) return; // 연결실패
+	vc.set(CV_CAP_PROP_FRAME_WIDTH, 640);
+	vc.set(CV_CAP_PROP_FRAME_HEIGHT, 480);
+
+	Mat img;
+	while(1){
+		vc >> img;
+		if(img.empty()) break;
+		imshow("cam",img);
+		if(waitKey(10)==27) break; //ESC
+	}
+	destroyAllWindows();
+
+7. avi 비디오 파일 읽어오기
+	VideoCapture vc("sample.avi");
+	if (!vc.isOpened()) return; // 불러오기 실패
+
+	Mat img;
+	while(1){
+		vc >> img;
+		if(img.emplty()) break;
+		imshow("video",img);
+		if(waitKey(10)==27) break; //ESC
+	}
+	destroyAllWindows();
+
+8. avi 비디오 녹화하기
+	double fps = 15;
+	int fourcc = CV_FOURCC('X','V','I','D'); // codec
+	bool isColor = true;
+
+	VideoWriter *video = new VideoWriter;
+	if(!video->open("result.avi", fourcc, fps, Size(img_w, img_h), isColor)){
+		delete video;
+		return;
+	}
+
+	Mat img;
+	while(1){
+		// ...
+		*video << img;
+		// ...
+	}
+	delete video;
+
+※ 코덱 목록: http://www.fourcc.org/codecs.php
